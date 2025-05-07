@@ -1,0 +1,21 @@
+    .headers{
+        color:darkcyan;
+    }
+
+    table{
+        table-layout: fixed;
+        border-right: 30px;
+        width: 100%;
+    }
+
+    #candidate-info{
+        text-align: right;
+    }
+
+    #contact-list{
+        list-style-type: none;
+    }
+
+    p, .text-to-align{
+        padding-right: 20%;
+    }
