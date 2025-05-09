@@ -48,6 +48,70 @@ resource "aws_s3_bucket" "sub_bucket" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_public_access_block" "s3_root_access" {
+  bucket = aws_s3_bucket.root_bucket.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+
+  depends_on = [aws_s3_bucket.root_bucket]
+}
+
+resource "aws_s3_bucket_public_access_block" "s3_sub_access" {
+  bucket = aws_s3_bucket.sub_bucket.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+
+  depends_on = [aws_s3_bucket.sub_bucket]
+}
+
+resource "aws_s3_bucket_policy" "s3_root_policy" {
+  bucket = aws_s3_bucket.root_bucket.id
+  policy = jsonencode({
+    "Id" : "Policy1746753478430",
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "Stmt1746753474784",
+        "Action" : [
+          "s3:GetObject"
+        ],
+        "Effect" : "Allow",
+        "Resource" : "arn:aws:s3:::sabahatresume.com/*",
+        "Principal" : "*"
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket.root_bucket, aws_s3_bucket_public_access_block.s3_root_access]
+}
+
+resource "aws_s3_bucket_policy" "s3_sub_policy" {
+  bucket = aws_s3_bucket.sub_bucket.id
+  policy = jsonencode({
+    "Id" : "Policy1746753589104",
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "Stmt1746753586112",
+        "Action" : [
+          "s3:GetObject"
+        ],
+        "Effect" : "Allow",
+        "Resource" : "arn:aws:s3:::www.sabahatresume.com/*",
+        "Principal" : "*"
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket.sub_bucket, aws_s3_bucket_public_access_block.s3_sub_access]
+}
+
 resource "aws_s3_object" "root_files" {
   for_each = var.s3_objects
   bucket   = aws_s3_bucket.root_bucket.id
@@ -71,4 +135,43 @@ resource "aws_s3_bucket_website_configuration" "root_s3_config" {
   }
 }
 
+
+/*Bucket Policy Root
+
+{
+  "Id": "Policy1746753478430",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1746753474784",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::sabahatresume.com/*",
+      "Principal": "*"
+    }
+  ]
+}
+*/
+
+/*Bucket Policy Sub
+
+{
+  "Id": "Policy1746753589104",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1746753586112",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::www.sabahatresume.com/*",
+      "Principal": "*"
+    }
+  ]
+}
+
+*/
 
