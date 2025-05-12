@@ -163,6 +163,61 @@ resource "aws_s3_bucket_website_configuration" "sub_s3_config" {
   depends_on = [aws_s3_bucket.root_bucket, aws_s3_bucket.sub_bucket, aws_s3_object.root_files, aws_s3_object.sub_files]
 }
 
+resource "aws_cloudfront_origin_access_control" "s3_origin" {
+  name                              = "S3 Origin"
+  description                       = "S3 Origin"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "s3_sub_distribution" {
+  origin {
+    domain_name              = aws_s3_bucket.sub_bucket.bucket_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_origin.id
+    origin_id                = "myS3Origin"
+  }
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+
+
+  aliases = [var.subdomain]
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+    #acm_certificate_arn = aws_acm_certificate.cert.arn
+  }
+}
+
+
 
 /*Bucket Policy Root
 
@@ -203,3 +258,7 @@ resource "aws_s3_bucket_website_configuration" "sub_s3_config" {
 
 */
 
+#To do: Look at ACM certificate. Need to fix it
+
+#Getting this error: │ Error: creating CloudFront Distribution: operation error CloudFront: CreateDistributionWithTags, https response error StatusCode: 400, RequestID: 79f097d4-85e1-4432-bf72-8bece294dc3c, InvalidArgument: The parameter ViewerCertificate Unsupported value for the SSLSupportMethod field: null.
+# Getting this error when not using ACM: │ Error: creating CloudFront Distribution: operation error CloudFront: CreateDistributionWithTags, https response error StatusCode: 400, RequestID: 4f2e2859-085b-4c81-9cdc-d0e9d13ccf1a, InvalidViewerCertificate: To add an alternate domain name (CNAME) to a CloudFront distribution, you must attach a trusted certificate that validates your authorization to use the domain name. For more details, see: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/CNAMEs.html#alternate-domain-names-requirements
