@@ -18,10 +18,17 @@ provider "aws" {
 #Update Route53 DNS records to point to CF
 
 /*1. Route 53 hosted zone (Done - kind of)
-2. ACM certificate (Done)
-3. S3 static hosting (Done - need to validate)
-4. CloudFront distribution
-5. Route 53 DNS records → point domain to CloudFront*/
+2. ACM certificate (Done - Redo)
+3. S3 static hosting (Done)
+4. CloudFront distribution (Almost Done after ACM cert is fixed)
+5. Route 53 DNS records → point domain to CloudFront
+
+TO DO:
+Create prevent_destroy for certificates, validations, route53 records and CF distributions
+Create Cloudfront distribution for S3 root domain
+Update CloudFront policy for both root and subdomains
+Create records for Route53 for subdomain and domain CF distributions
+Work on creating a script*/
 
 
 #Manually register domain but show documnetation to register via:
@@ -36,6 +43,33 @@ resource "aws_acm_certificate" "cert" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+data "aws_route53_zone" "domain_zone" {
+  name         = "sabahatresume.com" # Replace with your domain name
+  private_zone = false
+}
+
+resource "aws_route53_record" "cert_record" {
+  for_each = {
+    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.domain_zone.id
+}
+
+resource "aws_acm_certificate_validation" "cert_valid" {
+  certificate_arn         = aws_acm_certificate.cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.cert_record : record.fqdn]
 }
 
 resource "aws_s3_bucket" "root_bucket" {
@@ -212,10 +246,15 @@ resource "aws_cloudfront_distribution" "s3_sub_distribution" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
-    #acm_certificate_arn = aws_acm_certificate.cert.arn
+    #cloudfront_default_certificate = true
+    acm_certificate_arn = aws_acm_certificate.cert.arn
+    ssl_support_method  = "sni-only"
   }
+
+  depends_on = [aws_acm_certificate_validation.cert_valid]
 }
+
+
 
 
 
