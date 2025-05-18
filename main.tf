@@ -18,9 +18,9 @@ provider "aws" {
 #Update Route53 DNS records to point to CF
 
 /*1. Route 53 hosted zone (Done - kind of)
-2. ACM certificate (Done - Redo)
+2. ACM certificate (Done)
 3. S3 static hosting (Done)
-4. CloudFront distribution (Almost Done after ACM cert is fixed)
+4. CloudFront distribution (Done)
 5. Route 53 DNS records → point domain to CloudFront
 
 TO DO:
@@ -205,6 +205,8 @@ resource "aws_cloudfront_origin_access_control" "s3_origin" {
   signing_protocol                  = "sigv4"
 }
 
+
+
 resource "aws_cloudfront_distribution" "s3_sub_distribution" {
   origin {
     domain_name              = aws_s3_bucket.sub_bucket.bucket_domain_name
@@ -245,14 +247,86 @@ resource "aws_cloudfront_distribution" "s3_sub_distribution" {
     }
   }
 
+
+
   viewer_certificate {
     #cloudfront_default_certificate = true
     acm_certificate_arn = aws_acm_certificate.cert.arn
     ssl_support_method  = "sni-only"
   }
 
-  depends_on = [aws_acm_certificate_validation.cert_valid]
+  depends_on = [aws_acm_certificate_validation.cert_valid, aws_s3_bucket.sub_bucket]
 }
+
+resource "aws_cloudfront_distribution" "s3_root_distribution" {
+  origin {
+    domain_name              = aws_s3_bucket.root_bucket.bucket_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3_origin.id
+    origin_id                = "myS3Origin"
+  }
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+
+  aliases = [var.rootdomain]
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+
+    cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" #Disable Caching
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+
+
+  viewer_certificate {
+    #cloudfront_default_certificate = true
+    acm_certificate_arn = aws_acm_certificate.cert.arn
+    ssl_support_method  = "sni-only"
+  }
+
+  depends_on = [aws_acm_certificate_validation.cert_valid, aws_s3_bucket.root_bucket]
+}
+
+resource "aws_route53_record" "r53_subdomain" {
+  zone_id = data.aws_route53_zone.domain_zone.id
+  name    = var.subdomain
+  type    = "A"
+  alias {
+    name                   = aws_cloudfront_distribution.s3_sub_distribution.domain_name
+    zone_id                = var.cf_hosted_zone
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "r53_rootdomain" {
+  zone_id = data.aws_route53_zone.domain_zone.id
+  name    = var.rootdomain
+  type    = "A"
+  alias {
+    name                   = aws_cloudfront_distribution.s3_root_distribution.domain_name
+    zone_id                = var.cf_hosted_zone
+    evaluate_target_health = true
+  }
+}
+
+
+
+
 
 
 
