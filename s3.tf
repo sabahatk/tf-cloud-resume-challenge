@@ -11,10 +11,10 @@ resource "aws_s3_bucket" "sub_bucket" {
 resource "aws_s3_bucket_public_access_block" "s3_root_access" {
   bucket = aws_s3_bucket.root_bucket.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 
   depends_on = [aws_s3_bucket.root_bucket]
 }
@@ -22,10 +22,10 @@ resource "aws_s3_bucket_public_access_block" "s3_root_access" {
 resource "aws_s3_bucket_public_access_block" "s3_sub_access" {
   bucket = aws_s3_bucket.sub_bucket.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 
   depends_on = [aws_s3_bucket.sub_bucket]
 }
@@ -33,17 +33,20 @@ resource "aws_s3_bucket_public_access_block" "s3_sub_access" {
 resource "aws_s3_bucket_policy" "s3_root_policy" {
   bucket = aws_s3_bucket.root_bucket.id
   policy = jsonencode({
-    "Id" : "Policy1746753478430",
     "Version" : "2012-10-17",
     "Statement" : [
       {
-        "Sid" : "Stmt1746753474784",
-        "Action" : [
-          "s3:GetObject"
-        ],
+        "Action" : "s3:GetObject",
         "Effect" : "Allow",
-        "Resource" : "arn:aws:s3:::sabahatresume.com/*",
-        "Principal" : "*"
+        "Resource" : "${aws_s3_bucket.root_bucket.arn}/*",
+        "Principal" : {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Condition : {
+          StringEquals : {
+            "AWS:SourceArn" = aws_cloudfront_distribution.s3_root_distribution.arn
+          }
+        }
       }
     ]
   })
@@ -54,17 +57,20 @@ resource "aws_s3_bucket_policy" "s3_root_policy" {
 resource "aws_s3_bucket_policy" "s3_sub_policy" {
   bucket = aws_s3_bucket.sub_bucket.id
   policy = jsonencode({
-    "Id" : "Policy1746753589104",
     "Version" : "2012-10-17",
     "Statement" : [
       {
-        "Sid" : "Stmt1746753586112",
-        "Action" : [
-          "s3:GetObject"
-        ],
+        "Action" : "s3:GetObject",
         "Effect" : "Allow",
-        "Resource" : "arn:aws:s3:::www.sabahatresume.com/*",
-        "Principal" : "*"
+        "Resource" : "${aws_s3_bucket.sub_bucket.arn}/*",
+        "Principal" : {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Condition : {
+          StringEquals : {
+            "AWS:SourceArn" = aws_cloudfront_distribution.s3_sub_distribution.arn
+          }
+        }
       }
     ]
   })

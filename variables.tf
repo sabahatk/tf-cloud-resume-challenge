@@ -22,5 +22,20 @@ variable "subdomain" {
 
 variable "s3_objects" {
   type    = set(string)
-  default = ["index.html", "styles.css", "index.js"]
+  default = ["index.html", "styles.css", "index.js", "error.html", "favicon.ico"]
+}
+
+variable "cf_hosted_zone" {
+  type    = string
+  default = "Z2FDTNDATAQYW2"
+}
+
+variable "table_name" {
+  type    = string
+  default = "VisitCounterDB"
+}
+
+variable "table_id" {
+  type    = string
+  default = "counter-id"
 }
