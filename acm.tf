@@ -7,6 +7,8 @@ resource "aws_acm_certificate" "cert" {
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [aws_s3_bucket.root_bucket, aws_s3_bucket.sub_bucket]
 }
 
 resource "aws_acm_certificate_validation" "cert_valid" {
