@@ -1,19 +1,25 @@
 import json
 import boto3
 
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('VisitCounterDB')
+def lambda_handler(event, context):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('VisitCounterDB')
 
 
-response = table.get_item(
-Key={'counter-id': '1'},
-    ConsistentRead=True,
-    ProjectionExpression='counterVal',
-)
-if 'Item' in response:
-    item = response['Item']
-print("Response is: ", item)
-counter_value = item['counterVal']
+    response = table.get_item(
+    Key={'counter-id': '1'},
+        ConsistentRead=True,
+        ProjectionExpression='counterVal',
+    )
 
-if counter_value:
-    print("The counter value is: ", counter_value)
+    if 'Item' in response:
+        item = response['Item']
+    counter_value = float(item['counterVal'])
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps(counter_value),
+        'headers': {
+            'Access-Control-Allow-Origin': '*'  # Allow all origins
+        }
+    }
