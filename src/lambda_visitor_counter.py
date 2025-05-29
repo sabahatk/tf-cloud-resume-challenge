@@ -13,3 +13,8 @@ def lambda_handler(event, context):
       ReturnValues="UPDATED_NEW"
     )
     print(response['Attributes'])
+
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Updated Visitor Counter Successfully')
+    }
