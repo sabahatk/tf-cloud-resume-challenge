@@ -12,12 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Linters
+        run: npm install -g htmlhint stlylint eslint
+      
       - name: Run HTMLHint
-        run: npx htmlhint "website/*.html"
+        run: htmlhint "website/*.html"
+        
       - name: Run CSS Stylelint 
-        uses: actions-hub/stylelint@latest
+        run: stylelint "website/*.css"
+        
       - name: Run JavaScript Lint
-        uses: npm init @eslint/config@latest
+        run: eslint "website/*.js"
+        
       - uses: shallwefootball/s3-upload-action@latest
         with:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
