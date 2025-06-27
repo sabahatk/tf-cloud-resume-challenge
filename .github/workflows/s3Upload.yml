@@ -6,7 +6,9 @@ on:
     paths:
       - 'website/**'
     
-
+permissions:
+  id-token: write 
+  
 jobs:
   upload:
     runs-on: ubuntu-latest
