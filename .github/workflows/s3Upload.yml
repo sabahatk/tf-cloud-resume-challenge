@@ -24,6 +24,16 @@ jobs:
         
       - name: Run JavaScript Lint
         run: eslint "website/*.js"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        with:
+          role-to-assume: arn:aws:iam::963527046541:role/github-actions-update-s3-static-webiste
+          role-session-name: githubactions
+          aws-region: "us-east-1"
+          
+      - name: Verify AWS Credentials
+        run: aws sts get-caller-identity
         
 #      - uses: shallwefootball/s3-upload-action@latest
 #        with:
