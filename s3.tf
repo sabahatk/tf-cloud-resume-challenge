@@ -55,6 +55,7 @@ resource "aws_s3_object" "root_files" {
     "index.js"   = "application/javascript",
     "error.html" = "text/html"
   }, each.value, "application/octet-stream")
+  acl = "public-read"
 }
 
 resource "aws_s3_object" "sub_files" {
@@ -68,6 +69,7 @@ resource "aws_s3_object" "sub_files" {
     "index.js"   = "application/javascript",
     "error.html" = "text/html"
   }, each.value, "application/octet-stream")
+  acl = "public-read"
 }
 
 resource "aws_s3_bucket_website_configuration" "root_s3_config" {
