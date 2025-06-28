@@ -47,8 +47,8 @@ resource "aws_s3_bucket_policy" "s3_sub_policy" {
 resource "aws_s3_object" "root_files" {
   for_each = toset(var.s3_objects)
   bucket   = aws_s3_bucket.root_bucket.id
-  key      = "${path.module}/${each.key}"
-  source   = "${path.module}/${each.key}"
+  key      = "${path.module}/website/${each.key}"
+  source   = "${path.module}/website/${each.key}"
   content_type = lookup({
     "index.html" = "text/html",
     "styles.css" = "text/css",
@@ -60,8 +60,8 @@ resource "aws_s3_object" "root_files" {
 resource "aws_s3_object" "sub_files" {
   for_each = toset(var.s3_objects)
   bucket   = aws_s3_bucket.sub_bucket.id
-  key      = "${path.module}/${each.key}"
-  source   = "${path.module}/${each.key}"
+  key      = "${path.module}/website/${each.key}"
+  source   = "${path.module}/website/${each.key}"
   content_type = lookup({
     "index.html" = "text/html",
     "styles.css" = "text/css",
