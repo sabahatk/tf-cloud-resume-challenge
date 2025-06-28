@@ -5,6 +5,10 @@ on:
     branches: [ "main" ]
     paths:
       - 'website/**'
+env:
+  ROOT_BUCKET_NAME: "sabahatresume.com"
+  SUB_BUCKET_NAME: "www.sabahatresume.com"
+  AWS_REGION : "us-east-1"
     
 permissions:
   id-token: write 
@@ -32,10 +36,16 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::963527046541:role/github-actions-update-s3-static-webiste
           role-session-name: githubactions
-          aws-region: "us-east-1"
+          aws-region: ${{ env.AWS_REGION }}
+
+        # Upload a file to AWS S3
+      - name: Copy Website Code to S3
+        run: |
+          aws s3 cp ./website/* s3://${{ env.ROOT_BUCKET_NAME }}/
+          aws s3 cp ./website/* s3://${{ env.SUB_BUCKET_NAME }}/
           
-      - name: Verify AWS Credentials
-        run: aws sts get-caller-identity
+#      - name: Verify AWS Credentials
+#        run: aws sts get-caller-identity
         
 #      - uses: shallwefootball/s3-upload-action@latest
 #        with:
