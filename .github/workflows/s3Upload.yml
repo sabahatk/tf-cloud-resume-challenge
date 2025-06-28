@@ -41,7 +41,8 @@ jobs:
         # Upload a file to AWS S3
       - name: Copy Website Code to S3
         run: |
-          aws s3 cp ./website/* s3://${{ env.ROOT_BUCKET_NAME }}/
+          aws s3 cp ./website s3://${{ env.ROOT_BUCKET_NAME }}/ --recursive
+          aws s3 cp ./website s3://${{ env.SUB_BUCKET_NAME }}/ --recursive
           
 #      - name: Verify AWS Credentials
 #        run: aws sts get-caller-identity
