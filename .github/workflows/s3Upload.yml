@@ -43,6 +43,32 @@ jobs:
         run: |
           aws s3 cp ./website s3://${{ env.ROOT_BUCKET_NAME }}/ --recursive
           aws s3 cp ./website s3://${{ env.SUB_BUCKET_NAME }}/ --recursive
+
+      - name: Get CloudFront Distribution ID for Root Domain
+        id: get_root_dist
+        run: |
+          ROOT_DIST_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items[?@=='sabahatresume.com']].Id" \
+            --output text)
+          echo "root_dist_id=$ROOT_DIST_ID" >> $GITHUB_OUTPUT
+
+      - name: Get CloudFront Distribution ID for Sub Domain
+        id: get_sub_dist
+        run: |
+          ROOT_DIST_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items[?@=='www.sabahatresume.com']].Id" \
+            --output text)
+          echo "sub_dist_id=$ROOT_DIST_ID" >> $GITHUB_OUTPUT
+
+      # Invalidate CloudFront Cache for Root
+      - name: Invalidate Root CloudFront
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ steps.get_root_dist.outputs.root_dist_id }} --paths "/*"
+
+      # Invalidate CloudFront Cache for Sub
+      - name: Invalidate Sub CloudFront
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ steps.get_sub_dist.outputs.sub_dist_id }} --paths "/*"
           
 #      - name: Verify AWS Credentials
 #        run: aws sts get-caller-identity
