@@ -187,7 +187,7 @@ variable "HTML_file" {
 
 variable "error_HTML_file" {
   type    = string
-  default = "index.html"
+  default = "error.html"
 }
 
 variable "redirect_policy" {
