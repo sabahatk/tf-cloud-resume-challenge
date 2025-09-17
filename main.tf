@@ -1,4 +1,4 @@
-#Set terraform providers
+#Set terraform provider
 terraform {
 
   cloud {
@@ -22,4 +22,5 @@ provider "aws" {
 }
 
 #Manually register domain but show documnetation to register via:
+
 #https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53domains_domain
