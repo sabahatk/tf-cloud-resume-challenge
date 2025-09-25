@@ -34,7 +34,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
         with:
-          role-to-assume: arn:aws:iam::963527046541:role/github-actions-update-s3-static-webiste
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           role-session-name: githubactions
           aws-region: ${{ env.AWS_REGION }}
 
@@ -69,13 +69,3 @@ jobs:
       - name: Invalidate Sub CloudFront
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ steps.get_sub_dist.outputs.sub_dist_id }} --paths "/*"
-          
-#      - name: Verify AWS Credentials
-#        run: aws sts get-caller-identity
-        
-#      - uses: shallwefootball/s3-upload-action@latest
-#        with:
-#          aws_key_id: ${{ secrets.AWS_KEY_ID }}
-#          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-#          aws_bucket: ${{ secrets.AWS_BUCKET }}
-#          source_dir: 'dirname'
